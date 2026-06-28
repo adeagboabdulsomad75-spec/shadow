@@ -3,6 +3,7 @@ package com.example.shadow
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,6 +18,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 fun CalculatorScreen(viewModel: CalculatorViewModel = viewModel()) {
     val displayValue = viewModel.display.value
     val scrollState = rememberScrollState()
+    val mainScrollState = rememberScrollState()
 
     // Auto-scroll to the end when display changes
     LaunchedEffect(displayValue) {
@@ -26,14 +28,15 @@ fun CalculatorScreen(viewModel: CalculatorViewModel = viewModel()) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(16.dp)
+            .verticalScroll(mainScrollState),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // Display area
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1.5f)
+                .heightIn(min = 120.dp, max = 200.dp)
                 .padding(8.dp),
             color = MaterialTheme.colorScheme.surfaceVariant,
             shape = MaterialTheme.shapes.large
@@ -64,29 +67,32 @@ fun CalculatorScreen(viewModel: CalculatorViewModel = viewModel()) {
                 ScientificButton("cos", Modifier.weight(1f)) { viewModel.onScientificClick("cos") }
                 ScientificButton("tan", Modifier.weight(1f)) { viewModel.onScientificClick("tan") }
                 ScientificButton("x²", Modifier.weight(1f)) { viewModel.onScientificClick("x²") }
+                ScientificButton("x³", Modifier.weight(1f)) { viewModel.onScientificClick("x³") }
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ScientificButton("log", Modifier.weight(1f)) { viewModel.onScientificClick("log") }
                 ScientificButton("ln", Modifier.weight(1f)) { viewModel.onScientificClick("ln") }
                 ScientificButton("sqrt", Modifier.weight(1f)) { viewModel.onScientificClick("sqrt") }
                 ScientificButton("^", Modifier.weight(1f)) { viewModel.onOperationClick("^") }
+                ScientificButton("eˣ", Modifier.weight(1f)) { viewModel.onScientificClick("eˣ") }
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ScientificButton("π", Modifier.weight(1f)) { viewModel.onScientificClick("π") }
                 ScientificButton("e", Modifier.weight(1f)) { viewModel.onScientificClick("e") }
                 ScientificButton("n!", Modifier.weight(1f)) { viewModel.onScientificClick("n!") }
-                ScientificButton("eˣ", Modifier.weight(1f)) { viewModel.onScientificClick("eˣ") }
+                ScientificButton("exp", Modifier.weight(1f)) { viewModel.onScientificClick("eˣ") }
+                ScientificButton("C", Modifier.weight(1f)) { viewModel.onClearClick() }
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         // Rows of buttons
         val buttons = listOf(
             listOf("7", "8", "9", "/"),
             listOf("4", "5", "6", "*"),
             listOf("1", "2", "3", "-"),
-            listOf("C", "0", "=", "+")
+            listOf("0", ".", "=", "+")
         )
 
         buttons.forEach { row ->
@@ -118,11 +124,12 @@ fun ScientificButton(text: String, modifier: Modifier = Modifier, onClick: () ->
     FilledTonalButton(
         onClick = onClick,
         modifier = modifier
-            .height(48.dp)
-            .padding(2.dp),
+            .height(44.dp)
+            .padding(1.dp),
+        contentPadding = PaddingValues(0.dp),
         shape = MaterialTheme.shapes.small
     ) {
-        Text(text = text, fontSize = 14.sp)
+        Text(text = text, fontSize = 12.sp)
     }
 }
 

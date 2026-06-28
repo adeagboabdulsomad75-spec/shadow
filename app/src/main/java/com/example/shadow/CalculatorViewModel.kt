@@ -18,10 +18,11 @@ class CalculatorViewModel : ViewModel() {
 
     fun onDigitClick(digit: String) {
         if (isNewInput) {
-            _display.value = digit
+            _display.value = if (digit == ".") "0." else digit
             isNewInput = false
         } else {
-            if (_display.value == "0") {
+            if (digit == "." && _display.value.contains(".")) return
+            if (_display.value == "0" && digit != ".") {
                 _display.value = digit
             } else {
                 _display.value += digit
