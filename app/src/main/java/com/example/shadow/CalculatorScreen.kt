@@ -3,7 +3,6 @@ package com.example.shadow
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,7 +17,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 fun CalculatorScreen(viewModel: CalculatorViewModel = viewModel()) {
     val displayValue = viewModel.display.value
     val scrollState = rememberScrollState()
-    val mainScrollState = rememberScrollState()
 
     // Auto-scroll to the end when display changes
     LaunchedEffect(displayValue) {
@@ -28,16 +26,15 @@ fun CalculatorScreen(viewModel: CalculatorViewModel = viewModel()) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(mainScrollState),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         // Display area
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 120.dp, max = 200.dp)
-                .padding(8.dp),
+                .weight(1f)
+                .padding(vertical = 8.dp),
             color = MaterialTheme.colorScheme.surfaceVariant,
             shape = MaterialTheme.shapes.large
         ) {
@@ -85,7 +82,7 @@ fun CalculatorScreen(viewModel: CalculatorViewModel = viewModel()) {
             }
         }
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.weight(0.05f))
 
         // Rows of buttons
         val buttons = listOf(

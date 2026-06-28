@@ -15,18 +15,33 @@ class CalculatorViewModel : ViewModel() {
     private var firstValue: Double? = null
     private var pendingOperation: String? = null
     private var isNewInput = true
+    private var currentOperand = "0"
 
     fun onDigitClick(digit: String) {
         if (isNewInput) {
-            _display.value = if (digit == ".") "0." else digit
+            currentOperand = if (digit == ".") "0." else digit
             isNewInput = false
         } else {
-            if (digit == "." && _display.value.contains(".")) return
-            if (_display.value == "0" && digit != ".") {
-                _display.value = digit
+            if (digit == "." && currentOperand.contains(".")) return
+            if (currentOperand == "0" && digit != ".") {
+                currentOperand = digit
             } else {
-                _display.value += digit
+                currentOperand += digit
             }
+        }
+        updateDisplay()
+    }
+
+    private fun updateDisplay() {
+        val firstPart = if (firstValue != null) formatValue(firstValue!!) else ""
+        
+        // If we have an operator but haven't started typing second number, show first + op
+        if (firstValue != null && pendingOperation != null && isNewInput) {
+            _display.value = "$firstPart $pendingOperation"
+        } else if (firstValue != null && pendingOperation != null) {
+            _display.value = "$firstPart $pendingOperation $currentOperand"
+        } else {
+            _display.value = currentOperand
         }
     }
 
@@ -47,23 +62,29 @@ class CalculatorViewModel : ViewModel() {
     }
 
     fun onOperationClick(operation: String) {
-        val currentValue = _display.value.replace(",", "").toDoubleOrNull() ?: return
+        val currentValue = currentOperand.replace(",", "").toDoubleOrNull() ?: 0.0
+        
         if (firstValue == null) {
             firstValue = currentValue
-        } else if (pendingOperation != null) {
+        } else if (!isNewInput && pendingOperation != null) {
             val result = calculateResult(firstValue!!, currentValue, pendingOperation!!)
-            _display.value = formatValue(result)
             firstValue = result
+            currentOperand = formatValue(result)
         }
+        
         pendingOperation = operation
         isNewInput = true
+        updateDisplay()
     }
 
     fun onEqualClick() {
-        val currentValue = _display.value.replace(",", "").toDoubleOrNull() ?: return
+        val currentValue = currentOperand.replace(",", "").toDoubleOrNull() ?: return
         val operation = pendingOperation ?: return
         val result = calculateResult(firstValue ?: 0.0, currentValue, operation)
-        _display.value = formatValue(result)
+        
+        val resultString = formatValue(result)
+        _display.value = resultString
+        currentOperand = resultString
         firstValue = null
         pendingOperation = null
         isNewInput = true
@@ -71,20 +92,21 @@ class CalculatorViewModel : ViewModel() {
 
     fun onClearClick() {
         _display.value = "0"
+        currentOperand = "0"
         firstValue = null
         pendingOperation = null
         isNewInput = true
     }
 
     fun onScientificClick(operation: String) {
-        val currentValue = _display.value.replace(",", "").toDoubleOrNull() ?: return
+        val currentValue = currentOperand.replace(",", "").toDoubleOrNull() ?: return
         val result = when (operation) {
             "sin" -> sin(Math.toRadians(currentValue))
             "cos" -> cos(Math.toRadians(currentValue))
             "tan" -> tan(Math.toRadians(currentValue))
-            "sqrt" -> sqrt(currentValue)
-            "log" -> log10(currentValue)
-            "ln" -> ln(currentValue)
+            "sqrt" -> if (currentValue >= 0) sqrt(currentValue) else Double.NaN
+            "log" -> if (currentValue > 0) log10(currentValue) else Double.NaN
+            "ln" -> if (currentValue > 0) ln(currentValue) else Double.NaN
             "x²" -> currentValue.pow(2)
             "x³" -> currentValue.pow(3)
             "eˣ" -> exp(currentValue)
@@ -93,12 +115,14 @@ class CalculatorViewModel : ViewModel() {
             "e" -> E
             else -> currentValue
         }
-        _display.value = formatValue(result)
+        
+        currentOperand = formatValue(result)
         isNewInput = true
+        updateDisplay()
     }
 
     private fun factorial(n: Double): Double {
-        if (n < 0 || n > 170) return Double.NaN // Limit for Double precision
+        if (n < 0 || n > 170) return Double.NaN
         if (n == 0.0) return 1.0
         var result = 1.0
         for (i in 1..n.toInt()) {
