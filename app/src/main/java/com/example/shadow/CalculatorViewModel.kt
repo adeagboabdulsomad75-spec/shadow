@@ -12,10 +12,21 @@ class CalculatorViewModel : ViewModel() {
     private val _display = mutableStateOf("0")
     val display: State<String> = _display
 
+    private val _isScientificMode = mutableStateOf(false)
+    val isScientificMode: State<Boolean> = _isScientificMode
+
     private var firstValue: Double? = null
     private var pendingOperation: String? = null
     private var isNewInput = true
     private var currentOperand = "0"
+
+    private val symbols = DecimalFormatSymbols(Locale.US)
+    private val standardFormat = DecimalFormat("#,###.##########", symbols)
+    private val scientificFormat = DecimalFormat("0.######E0", symbols)
+
+    fun toggleScientificMode() {
+        _isScientificMode.value = !_isScientificMode.value
+    }
 
     fun onDigitClick(digit: String) {
         if (isNewInput) {
@@ -32,10 +43,20 @@ class CalculatorViewModel : ViewModel() {
         updateDisplay()
     }
 
+    fun onBackspaceClick() {
+        if (!isNewInput) {
+            currentOperand = if (currentOperand.length > 1) {
+                currentOperand.dropLast(1)
+            } else {
+                "0"
+            }
+            updateDisplay()
+        }
+    }
+
     private fun updateDisplay() {
         val firstPart = if (firstValue != null) formatValue(firstValue!!) else ""
         
-        // If we have an operator but haven't started typing second number, show first + op
         if (firstValue != null && pendingOperation != null && isNewInput) {
             _display.value = "$firstPart $pendingOperation"
         } else if (firstValue != null && pendingOperation != null) {
@@ -44,10 +65,6 @@ class CalculatorViewModel : ViewModel() {
             _display.value = currentOperand
         }
     }
-
-    private val symbols = DecimalFormatSymbols(Locale.US)
-    private val standardFormat = DecimalFormat("#,###.##########", symbols)
-    private val scientificFormat = DecimalFormat("0.######E0", symbols)
 
     private fun formatValue(value: Double): String {
         if (value.isNaN()) return "Error"
@@ -104,15 +121,17 @@ class CalculatorViewModel : ViewModel() {
             "sin" -> sin(Math.toRadians(currentValue))
             "cos" -> cos(Math.toRadians(currentValue))
             "tan" -> tan(Math.toRadians(currentValue))
-            "sqrt" -> if (currentValue >= 0) sqrt(currentValue) else Double.NaN
+            "sqrt", "√" -> if (currentValue >= 0) sqrt(currentValue) else Double.NaN
             "log" -> if (currentValue > 0) log10(currentValue) else Double.NaN
             "ln" -> if (currentValue > 0) ln(currentValue) else Double.NaN
             "x²" -> currentValue.pow(2)
             "x³" -> currentValue.pow(3)
             "eˣ" -> exp(currentValue)
-            "n!" -> factorial(currentValue)
+            "n!", "!" -> factorial(currentValue)
             "π" -> PI
             "e" -> E
+            "%" -> currentValue / 100.0
+            "1/x" -> if (currentValue != 0.0) 1.0 / currentValue else Double.NaN
             else -> currentValue
         }
         
@@ -137,7 +156,7 @@ class CalculatorViewModel : ViewModel() {
             "-" -> first - second
             "*" -> first * second
             "/" -> if (second != 0.0) first / second else Double.NaN
-            "^" -> first.pow(second)
+            "^", "xʸ" -> first.pow(second)
             else -> second
         }
     }
